@@ -30,10 +30,10 @@ def get_categories() -> List[Category]:
 
 
 def get_category(category_id: int) -> Optional[Category]:
-    query = '''SELECT categoryID, name as categoryName from CATEGORY WHERE categoryID = ?'''
+    query = '''SELECT categoryID, name as categoryName from Category WHERE categoryID = ?'''
     with closing(conn.cursor()) as c:
         c.execute(query, (category_id,))
-        row = c.fetchone()
+        row: Any = c.fetchone()
         if row:
             return make_category(row)
         else:
@@ -45,3 +45,39 @@ def make_movie_list(results) -> List[Movie]:
     for row in results:
         movies.append(make_movie(row))
     return movies
+
+
+def get_movies_by_category(category_id: int) -> List[Movie]:
+    query = '''SELECT movieID, m.categoryID, c.name AS categoryName, m.name AS title, year, minutes AS runtime 
+               FROM Movie m JOIN Category c on c.categoryID = m.categoryID 
+               WHERE m.categoryID = ?'''
+    with closing(conn.cursor()) as c:
+        c.execute(query, (category_id,))
+        results = c.fetchall()
+
+    return make_movie_list(results)
+
+
+def get_movies_by_year(year: int) -> List[Movie]:
+    query = '''SELECT movieID, categoryID, c.categoryName AS cateogryName, m.name AS title, year, minutes AS runtime 
+               FROM Movie m JOIN Category c on c.categoryID = m.categoryID
+               WHERE year = ?'''
+    with closing(conn.cursor()) as c:
+        c.execute(query, (year,))
+        results = c.fetchall()
+
+    return make_movie_list(results)
+
+
+def add_movie(movie: Movie) -> None:
+    sql = '''INSERT INTO Movie m (categoryID, name, year, minutes) VALUES (?, ?, ?, ?)'''
+    with closing(conn.cursor()) as c:
+        c.execute(sql, (movie.category.id, movie.name, movie.year, movie.minutes))
+    conn.commit()
+
+
+def delete_movie(movie_id: int) -> None:
+    sql = '''DELETE FROM Movie WHERE movieID = ?'''
+    with closing(conn.cursor()) as c:
+        c.execute(sql,  (movie_id,))
+        conn.commit()

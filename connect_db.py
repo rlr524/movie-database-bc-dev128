@@ -1,6 +1,7 @@
 import sqlite3
 from movie_repository import MovieRepository
 
+
 class Database(MovieRepository):
     def connect(self) -> sqlite3.Connection:
         conn = sqlite3.connect("movies.sqlite")
